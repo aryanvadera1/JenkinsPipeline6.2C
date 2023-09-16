@@ -1,47 +1,76 @@
 pipeline {
-    agent Built-In Node // You can specify a specific Jenkins agent here
+    agent any
 
     stages {
         stage('Checkout') {
             steps {
-                
-                script {
-                    checkout scm
-                }
+                checkout scm
             }
         }
-        stage('Build') {
+        stage('Build (Maven)') {
             steps {
-                // Use a build tool like Maven to build your project
                 sh 'mvn clean package'
             }
         }
-        stage('Test') {
+        stage('Unit and Integration Tests') {
             steps {
-                // To run unit and integration tests
-                sh 'run_tests.sh'
+                // Run unit tests 
+                sh 'run_unit_tests.sh'
+
+                // Run integration tests 
+                sh 'run_integration_tests.sh'
             }
         }
-        stage('Deploy') {
-            when {
-                // Define when this stage should run (e.g., after successful tests)
-                expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') }
-            }
+        stage('Code Analysis (SonarQube)') {
             steps {
-                // Deploy your application to a staging or production environment
+                // Perform code analysis using SonarQube 
+                sh 'sonar-scanner'
+            }
+        }
+        stage('Security Scan (OWASP ZAP)') {
+            steps {
+                // Perform security scan using OWASP ZAP 
+                sh 'owasp-zap-scan'
+            }
+        }
+        stage('Deploy to Staging (AWS EC2)') {
+            steps {
+                // Deploy to staging 
                 sh 'deploy_to_staging.sh'
+            }
+        }
+        stage('Integration Tests on Staging') {
+            steps {
+                // Run integration tests on staging 
+                sh 'run_integration_tests_on_staging.sh'
+            }
+        }
+        stage('Deploy to Production (AWS EC2)') {
+            steps {
+                // Deploy to production 
+                sh 'deploy_to_production.sh'
             }
         }
     }
 
     post {
         success {
-            // Send a success notification
-            echo 'Pipeline was successful'
+            // Send success notification email
+            emailext(
+                subject: 'Pipeline Success',
+                body: 'The Jenkins pipeline has completed successfully.',
+                attachLog: true,
+                to: 'vaderaaryan1505@gmail.com'
+            )
         }
         failure {
-            // Send a failure notification
-            echo 'Pipeline failed'
+            // Send failure notification email
+            emailext(
+                subject: 'Pipeline Failure',
+                body: 'The Jenkins pipeline has failed. Please investigate.',
+                attachLog: true,
+                to: 'vaderaaryan1505@gmail.com'
+            )
         }
     }
 }
