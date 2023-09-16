@@ -1,0 +1,47 @@
+pipeline {
+    agent Built-In Node // You can specify a specific Jenkins agent here
+
+    stages {
+        stage('Checkout') {
+            steps {
+                
+                script {
+                    checkout scm
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                // Use a build tool like Maven to build your project
+                sh 'mvn clean package'
+            }
+        }
+        stage('Test') {
+            steps {
+                // To run unit and integration tests
+                sh 'run_tests.sh'
+            }
+        }
+        stage('Deploy') {
+            when {
+                // Define when this stage should run (e.g., after successful tests)
+                expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') }
+            }
+            steps {
+                // Deploy your application to a staging or production environment
+                sh 'deploy_to_staging.sh'
+            }
+        }
+    }
+
+    post {
+        success {
+            // Send a success notification
+            echo 'Pipeline was successful'
+        }
+        failure {
+            // Send a failure notification
+            echo 'Pipeline failed'
+        }
+    }
+}
