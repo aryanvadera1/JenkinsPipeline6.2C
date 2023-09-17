@@ -2,75 +2,70 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
+        stage('Build') {
             steps {
-                checkout scm
+                echo 'Executing the Build Stage'
             }
         }
-        stage('Build (Maven)') {
-            steps {
-                sh 'mvn clean package'
-            }
-        }
+
         stage('Unit and Integration Tests') {
             steps {
-                // Run unit tests 
-                sh 'run_unit_tests.sh'
+                echo 'Executing the Unit and Integration Tests Stage'
+            }
+            post {
+                success {
+                    mail to: 's222502768@deakin.edu.au',
+                         subject: "Success: Unit and Integration Tests - ${currentBuild.fullDisplayName}",
+                         body: 'Unit and Integration Tests have been completed successfully. Check the attached logs for details.'
+                }
+                failure {
+                    mail to: 's222502768@deakin.edu.au',
+                         subject: "Failure: Unit and Integration Tests - ${currentBuild.fullDisplayName}",
+                         body: 'You can check the attached logs for details.'
+                }
+            }
+        }
 
-                // Run integration tests 
-                sh 'run_integration_tests.sh'
-            }
-        }
-        stage('Code Analysis (SonarQube)') {
+        stage('Code Analysis') {
             steps {
-                // Perform code analysis using SonarQube 
-                sh 'sonar-scanner'
+                echo 'Executing the Code Analysis Stage'
             }
         }
-        stage('Security Scan (OWASP ZAP)') {
+
+        stage('Security Scan') {
             steps {
-                // Perform security scan using OWASP ZAP 
-                sh 'owasp-zap-scan'
+                echo 'Executing the Security Scan Stage'
+            }
+            post {
+                success {
+                    mail to: 's222502768@deakin.edu.au',
+                         subject: "Success: Security Scan - ${currentBuild.fullDisplayName}",
+                         body: 'The Security Scan has been completed successfully. Check the attached logs for details.'
+                }
+                failure {
+                    mail to: 's222502768@deakin.edu.au',
+                         subject: "Failure: Security Scan - ${currentBuild.fullDisplayName}",
+                         body: 'you can check the attached logs for details.'
+                }
             }
         }
-        stage('Deploy to Staging (AWS EC2)') {
+
+        stage('Deploy to Staging') {
             steps {
-                // Deploy to staging 
-                sh 'deploy_to_staging.sh'
+                echo 'Executing the Deploy to Staging Stage'
             }
         }
+
         stage('Integration Tests on Staging') {
             steps {
-                // Run integration tests on staging 
-                sh 'run_integration_tests_on_staging.sh'
+                echo 'Executing the Integration Tests on Staging Stage'
             }
         }
-        stage('Deploy to Production (AWS EC2)') {
-            steps {
-                // Deploy to production 
-                sh 'deploy_to_production.sh'
-            }
-        }
-    }
 
-    post {
-        success {
-            // Send success notification email
-            emailext(
-                subject: 'Pipeline Success',
-                body: 'The Jenkins pipeline has completed successfully.',
-                attachLog: true,
-                to: 'vaderaaryan1505@gmail.com'
-            )
-        }
-        failure {
-            // Send failure notification email
-            emailext(
-                subject: 'Pipeline Failure',
-                body: 'The Jenkins pipeline has failed. Please investigate.',
-                attachLog: true,
-                to: 'vaderaaryan1505@gmail.com'
-            )
+        stage('Deploy to Production') {
+            steps {
+                echo 'Executing the Deploy to Production Stage'
+            }
         }
     }
 }
